@@ -9,7 +9,8 @@ import torch
 class HelenDataset(Dataset):
     # HelenDataset
 
-    def __init__(self, txt_file, root_dir, parts_root_dir, stage=None, transform=None, only_parts=True):
+    def __init__(self, txt_file, root_dir, parts_root_dir, stage=None, transform=None, only_parts=True,
+                 train_subset=None):
         """
         Args:
             txt_file (string): Path to the txt file with annotations.
@@ -17,15 +18,18 @@ class HelenDataset(Dataset):
             transform (callable, optional): Optional transform to be applied
                 on a sample.
         """
-        self.name_list = np.loadtxt(os.path.join(root_dir, txt_file), dtype="str", delimiter=',')
         self.mode = 'train'
-        self.only_parts = only_parts
         if txt_file == "exemplars.txt":
             self.mode = 'train'
         elif txt_file == "testing.txt":
             self.mode = 'test'
         elif txt_file == "tuning.txt":
             self.mode = 'val'
+        if train_subset and self.mode == 'train':
+            self.name_list = np.loadtxt(os.path.join(root_dir, txt_file), dtype="str", delimiter=',')[:train_subset]
+        else:
+            self.name_list = np.loadtxt(os.path.join(root_dir, txt_file), dtype="str", delimiter=',')
+        self.only_parts = only_parts
         self.root_dir = root_dir
         self.parts_root_dir = parts_root_dir
         self.transform = transform

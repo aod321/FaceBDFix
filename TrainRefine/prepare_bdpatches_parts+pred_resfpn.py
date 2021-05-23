@@ -47,6 +47,8 @@ transforms_list = {
         ]),
     'test':
         transforms.Compose([
+            ToPILImage(),
+            Resize((512, 512)),
             Stage1ToTensor()
         ])
 }
@@ -62,7 +64,8 @@ Dataset = {x: HelenDataset(txt_file=txt_file_names[x],
                            root_dir=root_dir,
                            parts_root_dir=parts_root_dir,
                            transform=transforms_list[x],
-                           stage='stage1'
+                           stage='stage1',
+                           train_subset=300            # 只要前300 张训练图片的碎片
                            )
            for x in ['train', 'val', 'test']
            }
@@ -80,11 +83,11 @@ dataloader = {x: DataLoaderX(Dataset[x], batch_size=1,
                              shuffle=False, num_workers=10)
               for x in ['train', 'val', 'test']
               }
-device = torch.device('cuda:5')
+device = torch.device('cuda:1')
 plt_show = False
 parts_name = ['lbrow', 'rbrow', 'leye', 'reye', 'nose', 'mouth']
 # prepare parts bd
-cropped_parts_bd_out_path = "/data3/yinzi/patchset/parts"
+cropped_parts_bd_out_path = "/data1/yinzi/patchset/parts"
 
 rough_model = FCN_res18_FPN(pretrained=True).to(device)
 state_file = "/home/yinzi/data/FaceBDFix/TrainingBackBone/checkpoints/checkpoints_fcn_res18_fpn_4ef6de97-b/best.pth.tar"
@@ -100,7 +103,7 @@ for x in parts_name:
 
 size_set = [8, 8, 8, 8, 16, 16]
 
-for x in ['train', 'val', 'test']:
+for x in ['test']:
     for idx, batch in enumerate(tqdm(dataloader[x])):
         image = batch['image'].to(device)
         label = batch['labels'].to(device)
